@@ -11,36 +11,10 @@ from dotenv import load_dotenv
 from azure.identity import DefaultAzureCredential, ManagedIdentityCredential
 
 def main(req: func.HttpRequest) -> func.HttpResponse:    
-    try:
-        #load environmental variables
-        load_dotenv()
-        SubscriptionID = os.getenv("SubscriptionID")
-        ResourceGroupName = os.getenv("ResourceGroupName")
-        DataFactoryName = os.getenv("DataFactoryName")
-        ClientID = os.getenv("ClientID")
-        SecretKey = os.getenv("SecretKey")
-        TenantID = os.getenv("TenantID")   
-        
-        credential = ManagedIdentityCredential()
-        
-        try:
-            credential.get_token() #token check
-        except:
-            if not ClientID:
-                raise Exception("Managed identity or environment variables are needed")
-            else:
-                credentials = ServicePrincipalCredentials(client_id=ClientID, secret=SecretKey, tenant=TenantID)
-        
-        resource_client = ResourceManagementClient(credentials, SubscriptionID)            
-        adf_client = DataFactoryManagementClient(credentials, SubscriptionID)  
-    
-        logging.info('Python HTTP trigger function processed a request.')
-        
+    try:        
         PipelinePartType = req.params.get('PipelinePartType')
-        JsonDefinition = req.params.get('JsonDefinition')
-        DataPipelineName = req.params.get('DataPipelineName')
         
-        logging.info(f"Processing PipelinePartType: {PipelinePartType}")
+        req_body = ""
         
         if not PipelinePartType:
             try:
@@ -49,6 +23,38 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                 pass
             else:
                 PipelinePartType = req_body.get('PipelinePartType')
+                
+        #load environmental variables        
+        load_dotenv()
+        SubscriptionID = os.getenv("SubscriptionID")
+        ResourceGroupName = os.getenv("ResourceGroupName")
+        DataFactoryName = os.getenv("DataFactoryName")
+        ClientID = os.getenv("ClientID")
+        SecretKey = os.getenv("SecretKey")
+        TenantID = os.getenv("TenantID")  
+        credential = ManagedIdentityCredential()        
+        try:
+            credential.get_token() #token check
+        except:
+            if not ClientID:
+                raise Exception("Managed identity or environment variables are needed")
+            else:
+                credentials = ServicePrincipalCredentials(client_id=ClientID, secret=SecretKey, tenant=TenantID)
+        
+        #Azure clients
+        resource_client = ResourceManagementClient(credentials, SubscriptionID)            
+        adf_client = DataFactoryManagementClient(credentials, SubscriptionID)  
+    
+        logging.info('Python HTTP trigger function processed a request.')        
+        
+        JsonDefinition = req_body
+        DataPipelineName = req_body.get('JsonDefinition').get("DataPipelineName")
+        DataPipelineName = req.params.get('DataPipelineName')
+        print(req.params)
+        print(req_body)
+        
+        logging.info(f"Processing PipelinePartType: {PipelinePartType}")        
+
         
         ##
         ## Azure Data Factory Objects
@@ -65,10 +71,10 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             Response = f"DataPipelineName {DataPipelineName} executed successfully!"
 
         if PipelinePartType:
-            return func.HttpResponse()
+            return func.HttpResponse(Response)
         else:
             return func.HttpResponse(
-                "Please pass a name on the query string or in the request body",
+                "Parameters not configured correctly.",
                 status_code=400
             )
             

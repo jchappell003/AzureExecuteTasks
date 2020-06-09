@@ -10,7 +10,7 @@ class TestFunction(unittest.TestCase):
         mylist = {  
                     "PipelinePartType": "ADF",
                     "JsonDefinition" : {
-                    "DataPipelineName" : ""
+                    "DataPipelineName" : "MyWaitADF"
                     }
                   }
         jsonparams = json.dumps(mylist,sort_keys=True,indent=4, separators=(',', ': '))   
@@ -27,7 +27,7 @@ class TestFunction(unittest.TestCase):
             method='POST',
             body=jsonparamsencoded.encode(),
             url='/api/HttpTrigger',
-            params={})
+            params={"test":123})
 
 
         # Call the function.
