@@ -68,7 +68,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             while adf_client.pipeline_runs.get(ResourceGroupName, DataFactoryName, run_response.run_id).status == "InProgress":
                 time.sleep(2)
             
-            Response = f"DataPipelineName {DataPipelineName} executed successfully!"
+            Response = adf_client.pipeline_runs.get(ResourceGroupName, DataFactoryName, run_response.run_id).status
 
         if PipelinePartType:
             return func.HttpResponse(Response)
